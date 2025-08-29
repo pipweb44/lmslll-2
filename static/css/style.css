@@ -54,26 +54,52 @@ body {
 
 /* Course Cards */
 .course-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     border: none;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
     overflow: hidden;
 }
 
 .course-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.course-card .card-img-top {
+    height: 200px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.course-card:hover .card-img-top {
+    transform: scale(1.05);
+}
+
+/* Course Detail Thumbnail */
+.course-thumbnail-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
 }
 
 .course-thumbnail {
-    height: 200px;
-    object-fit: cover;
-    width: 100%;
+    transition: transform 0.3s ease;
+    border-radius: 12px;
 }
 
-.course-card-body {
-    padding: 1.5rem;
+.course-thumbnail:hover {
+    transform: scale(1.02);
+}
+
+.course-thumbnail-placeholder {
+    border: 2px dashed #dee2e6;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.course-thumbnail-placeholder:hover {
+    border-color: #6c757d;
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
 }
 
 .course-title {
