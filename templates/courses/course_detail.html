@@ -54,51 +54,164 @@
             <!-- Course Description -->
             <div class="card mb-4">
                 <div class="card-body">
-                    <h4 class="card-title">About this Course</h4>
+                    <h4 class="card-title">حول هذه الدورة</h4>
                     <p class="card-text">{{ course.description|linebreaks }}</p>
                 </div>
             </div>
             
-            <!-- Course Modules -->
+            <!-- Course Content Tabs -->
             <div class="card mb-4">
                 <div class="card-body">
-                    <h4 class="card-title mb-4">Course Content</h4>
-                    {% for module in modules %}
-                    <div class="module-item mb-3">
-                        <h5 class="fw-bold">{{ forloop.counter }}. {{ module.title }}</h5>
-                        {% if module.description %}
-                        <p class="text-muted">{{ module.description }}</p>
+                    <!-- Navigation Tabs -->
+                    <ul class="nav nav-tabs mb-4" id="courseContentTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="lessons-tab" data-bs-toggle="tab" data-bs-target="#lessons" type="button" role="tab" aria-controls="lessons" aria-selected="true">
+                                <i class="fas fa-play-circle me-2"></i>الدروس
+                            </button>
+                        </li>
+                        {% if posts %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="announcements-tab" data-bs-toggle="tab" data-bs-target="#announcements" type="button" role="tab" aria-controls="announcements" aria-selected="false">
+                                <i class="fas fa-bullhorn me-2"></i>الإعلانات
+                                <span class="badge bg-primary ms-1">{{ posts|length }}</span>
+                            </button>
+                        </li>
                         {% endif %}
-                        
-                        {% if module.videos.all %}
-                        <div class="videos-list ms-3">
-                            {% for video in module.videos.all %}
-                            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                                <div class="d-flex align-items-center">
-                                    {% if video.is_free or user_enrolled %}
-                                    <a href="{% url 'courses:video_player' course.slug video.id %}" class="text-decoration-none d-flex align-items-center">
-                                        <i class="fas fa-play-circle text-primary me-2"></i>
-                                        <span class="text-dark">{{ video.title }}</span>
-                                    </a>
-                                    {% else %}
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-lock text-muted me-2"></i>
-                                        <span class="text-muted">{{ video.title }}</span>
-                                    </div>
-                                    {% endif %}
-                                    {% if video.is_free %}
-                                    <span class="badge bg-success ms-2">Free</span>
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content" id="courseContentTabsContent">
+                        <!-- Lessons Tab -->
+                        <div class="tab-pane fade show active" id="lessons" role="tabpanel" aria-labelledby="lessons-tab">
+                            <h5 class="mb-4">محتوى الدورة</h5>
+                            {% for module in modules %}
+                            <div class="module-item mb-4">
+                                <div class="module-header bg-light p-3 rounded-top border">
+                                    <h6 class="fw-bold mb-1">{{ forloop.counter }}. {{ module.title }}</h6>
+                                    {% if module.description %}
+                                    <p class="text-muted mb-0 small">{{ module.description }}</p>
                                     {% endif %}
                                 </div>
-                                <span class="text-muted small">{{ video.duration_minutes }} min</span>
+                                
+                                {% if module.videos.all %}
+                                <div class="videos-list border border-top-0 rounded-bottom">
+                                    {% for video in module.videos.all %}
+                                    <div class="d-flex justify-content-between align-items-center p-3 {% if not forloop.last %}border-bottom{% endif %}">
+                                        <div class="d-flex align-items-center">
+                                            {% if video.is_free or user_enrolled %}
+                                            <a href="{% url 'courses:video_player' course.slug video.id %}" class="text-decoration-none d-flex align-items-center">
+                                                <i class="fas fa-play-circle text-primary me-3"></i>
+                                                <div>
+                                                    <span class="text-dark fw-medium">{{ video.title }}</span>
+                                                    {% if video.description %}
+                                                    <div class="text-muted small">{{ video.description|truncatechars:80 }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </a>
+                                            {% else %}
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-lock text-muted me-3"></i>
+                                                <div>
+                                                    <span class="text-muted">{{ video.title }}</span>
+                                                    {% if video.description %}
+                                                    <div class="text-muted small">{{ video.description|truncatechars:80 }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                            {% if video.is_free %}
+                                            <span class="badge bg-success ms-2">مجاني</span>
+                                            {% endif %}
+                                        </div>
+                                        <span class="text-muted small">
+                                            <i class="fas fa-clock me-1"></i>{{ video.duration_minutes }} دقيقة
+                                        </span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% empty %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-video fa-3x text-muted mb-3"></i>
+                                <h6 class="text-muted">سيتوفر محتوى الدورة قريباً</h6>
+                                <p class="text-muted small">سيقوم المعلم بإضافة الدروس والفيديوهات قريباً</p>
                             </div>
                             {% endfor %}
                         </div>
+
+                        <!-- Announcements Tab -->
+                        {% if posts %}
+                        <div class="tab-pane fade" id="announcements" role="tabpanel" aria-labelledby="announcements-tab">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="mb-0">إعلانات الدورة</h5>
+                                {% if user == course.instructor %}
+                                <a href="{% url 'courses:create_post' course.slug %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-plus me-1"></i>إضافة إعلان
+                                </a>
+                                {% endif %}
+                            </div>
+                            
+                            {% for post in posts %}
+                            <div class="post-item mb-3 p-3 {% if post.is_pinned %}border border-warning bg-warning bg-opacity-10{% else %}bg-light{% endif %} rounded">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="d-flex align-items-center">
+                                        {% if post.is_pinned %}
+                                        <i class="fas fa-thumbtack text-warning me-2"></i>
+                                        {% endif %}
+                                        <h6 class="mb-0">{{ post.title }}</h6>
+                                        <span class="badge bg-{{ post.post_type|yesno:'primary,success,info,warning' }} ms-2">
+                                            {{ post.get_post_type_display }}
+                                        </span>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="text-muted">{{ post.created_at|date:"M d, Y" }}</small>
+                                        {% if user == course.instructor %}
+                                        <div class="dropdown d-inline-block ms-2">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                <i class="fas fa-ellipsis-h"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="{% url 'courses:edit_post' course.slug post.id %}">
+                                                    <i class="fas fa-edit me-2"></i>تعديل
+                                                </a></li>
+                                                <li><a class="dropdown-item text-danger" href="{% url 'courses:delete_post' course.slug post.id %}">
+                                                    <i class="fas fa-trash me-2"></i>حذف
+                                                </a></li>
+                                            </ul>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <p class="mb-2">{{ post.content|linebreaks }}</p>
+                                
+                                {% if post.attachment %}
+                                <div class="attachment-preview mb-2">
+                                    <a href="{{ post.attachment.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                        <i class="fas fa-paperclip me-1"></i>تحميل المرفق
+                                    </a>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="post-meta">
+                                    <small class="text-muted">
+                                        <i class="fas fa-user me-1"></i>بواسطة {{ post.author.get_full_name|default:post.author.username }}
+                                    </small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            
+                            {% if posts|length >= 10 %}
+                            <div class="text-center">
+                                <a href="{% url 'courses:course_posts' course.slug %}" class="btn btn-outline-primary">
+                                    <i class="fas fa-eye me-2"></i>عرض جميع الإعلانات
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
                         {% endif %}
                     </div>
-                    {% empty %}
-                    <p class="text-muted">Course content will be available soon.</p>
-                    {% endfor %}
                 </div>
             </div>
             

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Course, Module, Video, Category
+from .models import Course, Module, Video, Post, Category
 
 class CourseForm(forms.ModelForm):
     class Meta:
@@ -37,6 +37,17 @@ class VideoForm(forms.ModelForm):
         fields = ['title', 'description', 'video_file', 'duration_minutes', 'order', 'is_free']
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
+        }
+
+class PostForm(forms.ModelForm):
+    class Meta:
+        model = Post
+        fields = ['title', 'content', 'post_type', 'attachment', 'is_pinned']
+        widgets = {
+            'content': forms.Textarea(attrs={'rows': 6, 'class': 'form-control'}),
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'post_type': forms.Select(attrs={'class': 'form-select'}),
+            'attachment': forms.FileInput(attrs={'class': 'form-control'}),
         }
     
     def __init__(self, *args, **kwargs):

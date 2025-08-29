@@ -44,7 +44,18 @@ class Course(models.Model):
     
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.title)
+            base_slug = slugify(self.title)
+            if not base_slug:  # If title has no ASCII characters
+                base_slug = f'course-{self.pk or Course.objects.count() + 1}'
+            
+            # Ensure uniqueness
+            slug = base_slug
+            counter = 1
+            while Course.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f'{base_slug}-{counter}'
+                counter += 1
+            
+            self.slug = slug
         super().save(*args, **kwargs)
     
     def get_absolute_url(self):
@@ -73,6 +84,34 @@ class Module(models.Model):
     
     class Meta:
         ordering = ['order']
+    
+    def __str__(self):
+        return f"{self.title} - {self.course.title}"
+
+class Post(models.Model):
+    POST_TYPES = [
+        ('announcement', 'Announcement'),
+        ('resource', 'Resource'),
+        ('assignment', 'Assignment'),
+        ('discussion', 'Discussion'),
+    ]
+    
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='posts')
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='course_posts'
+    )
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    post_type = models.CharField(max_length=20, choices=POST_TYPES, default='announcement')
+    attachment = models.FileField(upload_to='course_posts/', blank=True, null=True)
+    is_pinned = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-is_pinned', '-created_at']
     
     def __str__(self):
         return f"{self.course.title} - {self.title}"

@@ -1,120 +1,294 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}Teacher Dashboard - EduPlatform{% endblock %}
+{% block title %}لوحة تحكم المعلم{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="fw-bold">Teacher Dashboard</h1>
-        <a href="{% url 'courses:create_course' %}" class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i>Create New Course
-        </a>
-    </div>
-    
-    <!-- Stats Cards -->
-    <div class="row mb-5">
-        <div class="col-md-3">
-            <div class="dashboard-card">
-                <i class="fas fa-chalkboard dashboard-icon"></i>
-                <div class="dashboard-number">{{ total_courses }}</div>
-                <div class="dashboard-label">Total Courses</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="dashboard-card">
-                <i class="fas fa-users dashboard-icon"></i>
-                <div class="dashboard-number">{{ total_students }}</div>
-                <div class="dashboard-label">Total Students</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="dashboard-card">
-                <i class="fas fa-clock dashboard-icon"></i>
-                <div class="dashboard-number">{{ pending_requests }}</div>
-                <div class="dashboard-label">Pending Requests</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="dashboard-card">
-                <i class="fas fa-star dashboard-icon"></i>
-                <div class="dashboard-number">4.8</div>
-                <div class="dashboard-label">Avg Rating</div>
+<div class="container-fluid py-4">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-gradient-primary text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-2">مرحباً، {{ user.get_full_name|default:user.username }}</h2>
+                            <p class="mb-0 opacity-8">إدارة شاملة لدوراتك التعليمية</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="{% url 'courses:create_course' %}" class="btn btn-light btn-lg">
+                                <i class="fas fa-plus me-2"></i>دورة جديدة
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    
-    <!-- My Courses -->
-    <div class="card">
-        <div class="card-header">
-            <h4 class="mb-0">My Courses</h4>
+
+    <!-- Statistics Overview -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">إجمالي الدورات</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_courses }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-book fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            {% if courses %}
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Course</th>
-                            <th>Students</th>
-                            <th>Status</th>
-                            <th>Created</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for course in courses %}
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    {% if course.thumbnail %}
-                                    <img src="{{ course.thumbnail.url }}" class="rounded me-3" width="60" height="40" style="object-fit: cover;">
-                                    {% endif %}
-                                    <div>
-                                        <strong>{{ course.title }}</strong><br>
-                                        <small class="text-muted">{{ course.category.name }}</small>
-                                    </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">الدورات المنشورة</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ published_courses }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">إجمالي الطلاب</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_students }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">التسجيلات الجديدة</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ recent_enrollments|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-plus fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Courses Management -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">دوراتي</h5>
+                    <a href="{% url 'courses:create_course' %}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus me-1"></i>دورة جديدة
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if course_data %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>الدورة</th>
+                                        <th>الطلاب</th>
+                                        <th>المحتوى</th>
+                                        <th>متوسط التقدم</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for data in course_data %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if data.course.thumbnail %}
+                                                    <img src="{{ data.course.thumbnail.url }}" class="rounded me-3" width="50" height="50" style="object-fit: cover;">
+                                                {% else %}
+                                                    <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                                        <i class="fas fa-book text-muted"></i>
+                                                    </div>
+                                                {% endif %}
+                                                <div>
+                                                    <h6 class="mb-0">{{ data.course.title }}</h6>
+                                                    <small class="text-muted">{{ data.course.category.name }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">{{ data.total_students }}</span>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{ data.total_modules }} مديول<br>
+                                                {{ data.total_videos }} فيديو
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="progress me-2" style="width: 80px; height: 8px;">
+                                                    <div class="progress-bar" style="width: {{ data.avg_progress }}%"></div>
+                                                </div>
+                                                <span class="small">{{ data.avg_progress|floatformat:0 }}%</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ data.course.is_published|yesno:'success,warning' }}">
+                                                {{ data.course.is_published|yesno:'منشور,مسودة' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                {% if data.course.slug %}
+                                                <a href="{% url 'courses:course_management' data.course.slug %}" class="btn btn-primary btn-sm" title="إدارة شاملة">
+                                                    <i class="fas fa-cogs"></i>
+                                                </a>
+                                                <a href="{% url 'courses:edit_course' data.course.slug %}" class="btn btn-outline-secondary btn-sm" title="تعديل">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="{% url 'courses:course_detail' data.course.slug %}" class="btn btn-outline-info btn-sm" title="عرض">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {% else %}
+                                                <span class="text-muted small">لا يوجد slug</span>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-chalkboard-teacher fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لم تقم بإنشاء أي دورات بعد</h5>
+                            <p class="text-muted">ابدأ بإنشاء دورتك الأولى لمشاركة معرفتك مع الطلاب</p>
+                            <a href="{% url 'courses:create_course' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>إنشاء دورة جديدة
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-lg-4">
+            <!-- Recent Enrollments -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">التسجيلات الأخيرة</h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_enrollments %}
+                        {% for enrollment in recent_enrollments %}
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="flex-shrink-0">
+                                <div class="avatar-circle bg-primary text-white">
+                                    {{ enrollment.student.first_name|first|default:enrollment.student.username|first }}
                                 </div>
-                            </td>
-                            <td>{{ course.total_students }}</td>
-                            <td>
-                                <span class="badge bg-{{ course.is_published|yesno:'success,warning' }}">
-                                    {{ course.is_published|yesno:'Published,Draft' }}
-                                </span>
-                            </td>
-                            <td>{{ course.created_at|date:"M d, Y" }}</td>
-                            <td>
-                                <div class="btn-group btn-group-sm">
-                                    <a href="{% url 'courses:course_detail' course.slug %}" class="btn btn-outline-primary" title="View">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{% url 'courses:edit_course' course.slug %}" class="btn btn-outline-secondary" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="{% url 'courses:manage_modules' course.slug %}" class="btn btn-outline-info" title="Modules">
-                                        <i class="fas fa-list"></i>
-                                    </a>
-                                    <a href="{% url 'courses:delete_course' course.slug %}" class="btn btn-outline-danger" title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-0 small">{{ enrollment.student.get_full_name|default:enrollment.student.username }}</h6>
+                                <small class="text-muted">{{ enrollment.course.title|truncatechars:30 }}</small>
+                                <div class="progress progress-sm mt-1">
+                                    <div class="progress-bar" style="width: {{ enrollment.progress_percentage }}%"></div>
                                 </div>
-                            </td>
-                        </tr>
+                            </div>
+                        </div>
                         {% endfor %}
-                    </tbody>
-                </table>
+                    {% else %}
+                        <p class="text-muted text-center">لا توجد تسجيلات جديدة</p>
+                    {% endif %}
+                </div>
             </div>
-            {% else %}
-            <div class="text-center py-5">
-                <i class="fas fa-chalkboard fa-3x text-muted mb-3"></i>
-                <h5>No courses yet</h5>
-                <p class="text-muted">Create your first course to start teaching!</p>
-                <a href="{% url 'courses:create_course' %}" class="btn btn-primary">
-                    <i class="fas fa-plus me-2"></i>Create Course
-                </a>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">إجراءات سريعة</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'courses:create_course' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-2"></i>إنشاء دورة جديدة
+                        </a>
+                        {% if courses and courses.first.slug %}
+                        <a href="{% url 'courses:course_management' courses.first.slug %}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-chart-bar me-2"></i>إحصائيات الدورات
+                        </a>
+                        <a href="{% url 'courses:student_progress' courses.first.slug %}" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-users me-2"></i>تقدم الطلاب
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
-            {% endif %}
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.border-left-primary { border-left: 0.25rem solid #4e73df !important; }
+.border-left-success { border-left: 0.25rem solid #1cc88a !important; }
+.border-left-info { border-left: 0.25rem solid #36b9cc !important; }
+.border-left-warning { border-left: 0.25rem solid #f6c23e !important; }
+
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.progress-sm {
+    height: 0.5rem;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.text-xs {
+    font-size: 0.75rem;
+}
+
+.font-weight-bold {
+    font-weight: 700;
+}
+
+.text-gray-800 {
+    color: #5a5c69;
+}
+
+.text-gray-300 {
+    color: #dddfeb;
+}
+</style>
 {% endblock %}

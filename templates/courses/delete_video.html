@@ -1,0 +1,58 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}حذف الفيديو - {{ object.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>تأكيد حذف الفيديو
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-warning me-2"></i>
+                        هل أنت متأكد من حذف هذا الفيديو؟ هذا الإجراء لا يمكن التراجع عنه.
+                    </div>
+                    
+                    <div class="video-preview bg-light p-3 rounded mb-4">
+                        <h5 class="mb-2">{{ object.title }}</h5>
+                        <p class="text-muted mb-2">{{ object.description|truncatechars:150 }}</p>
+                        <div class="row">
+                            <div class="col-6">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>{{ object.duration_minutes }} دقيقة
+                                </small>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">
+                                    <i class="fas fa-layer-group me-1"></i>{{ object.module.title }}
+                                </small>
+                            </div>
+                        </div>
+                        {% if object.is_free %}
+                        <span class="badge bg-success mt-2">فيديو مجاني</span>
+                        {% endif %}
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'courses:manage_modules' object.module.course.slug %}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times me-2"></i>إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>حذف الفيديو
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

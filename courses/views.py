@@ -4,8 +4,8 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.db.models import Q, Avg
-from .models import Course, Category, Module, Video
-from .forms import CourseForm, ModuleForm, VideoForm
+from .models import Course, Category, Module, Video, Post
+from .forms import CourseForm, ModuleForm, VideoForm, PostForm
 from enrollments.models import Enrollment
 
 class HomeView(TemplateView):
@@ -84,6 +84,15 @@ class CourseDetailView(DetailView):
         context['modules'] = course.modules.prefetch_related('videos')
         context['ratings'] = course.ratings.select_related('student')[:5]
         context['avg_rating'] = course.average_rating
+        
+        # Add course posts for enrolled students and teachers
+        if self.request.user.is_authenticated and (
+            context.get('user_enrolled') or 
+            self.request.user == course.instructor or 
+            self.request.user.is_admin
+        ):
+            context['posts'] = course.posts.select_related('author').order_by('-is_pinned', '-created_at')[:10]
+        
         return context
 
 class CoursesByCategoryView(ListView):
@@ -109,22 +118,39 @@ class TeacherDashboardView(LoginRequiredMixin, TemplateView):
     
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_teacher:
-            messages.error(request, 'Access denied. Teacher account required.')
+            messages.error(request, 'Access denied. Teachers only.')
             return redirect('courses:course_list')
         return super().dispatch(request, *args, **kwargs)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user = self.request.user
-        courses = user.courses_taught.all()
+        teacher_courses = Course.objects.filter(instructor=self.request.user)
         
-        context['courses'] = courses
-        context['total_courses'] = courses.count()
-        context['total_students'] = sum(course.total_students for course in courses)
-        context['pending_requests'] = sum(
-            course.enrollment_requests.filter(status='pending').count() 
-            for course in courses
-        )
+        # Course statistics
+        context['courses'] = teacher_courses
+        context['total_courses'] = teacher_courses.count()
+        context['published_courses'] = teacher_courses.filter(is_published=True).count()
+        context['total_students'] = Enrollment.objects.filter(course__in=teacher_courses).count()
+        
+        # Recent enrollments
+        context['recent_enrollments'] = Enrollment.objects.filter(
+            course__in=teacher_courses
+        ).select_related('student', 'course').order_by('-enrolled_at')[:5]
+        
+        # Course progress data
+        course_data = []
+        for course in teacher_courses:
+            enrollments = course.enrollments.all()
+            total_videos = Video.objects.filter(module__course=course).count()
+            course_data.append({
+                'course': course,
+                'total_students': enrollments.count(),
+                'total_videos': total_videos,
+                'total_modules': course.modules.count(),
+                'avg_progress': enrollments.aggregate(avg_progress=Avg('progress_percentage'))['avg_progress'] or 0
+            })
+        context['course_data'] = course_data
+        
         return context
 
 class CreateCourseView(LoginRequiredMixin, CreateView):
@@ -142,6 +168,9 @@ class CreateCourseView(LoginRequiredMixin, CreateView):
         form.instance.instructor = self.request.user
         messages.success(self.request, 'Course created successfully!')
         return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse_lazy('courses:teacher_dashboard')
 
 class EditCourseView(LoginRequiredMixin, UpdateView):
     model = Course

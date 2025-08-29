@@ -1,0 +1,182 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}منشورات الدورة - {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-1">منشورات الدورة</h3>
+                            <p class="text-muted mb-0">{{ course.title }}</p>
+                        </div>
+                        <div>
+                            <a href="{% url 'courses:create_post' course.slug %}" class="btn btn-primary me-2">
+                                <i class="fas fa-plus me-2"></i>إضافة منشور
+                            </a>
+                            <a href="{% url 'courses:course_management' course.slug %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>العودة
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Posts List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    {% if posts %}
+                        {% for post in posts %}
+                        <div class="post-item border-bottom pb-4 mb-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="post-type-badge me-3">
+                                        {% if post.post_type == 'announcement' %}
+                                            <div class="badge bg-primary rounded-pill p-2">
+                                                <i class="fas fa-bullhorn"></i>
+                                            </div>
+                                        {% elif post.post_type == 'resource' %}
+                                            <div class="badge bg-success rounded-pill p-2">
+                                                <i class="fas fa-file-alt"></i>
+                                            </div>
+                                        {% elif post.post_type == 'assignment' %}
+                                            <div class="badge bg-warning rounded-pill p-2">
+                                                <i class="fas fa-tasks"></i>
+                                            </div>
+                                        {% else %}
+                                            <div class="badge bg-info rounded-pill p-2">
+                                                <i class="fas fa-comments"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1">
+                                            {{ post.title }}
+                                            {% if post.is_pinned %}
+                                                <i class="fas fa-thumbtack text-warning ms-2" title="منشور مثبت"></i>
+                                            {% endif %}
+                                        </h5>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>{{ post.created_at|date:"d M Y - H:i" }}
+                                            {% if post.updated_at != post.created_at %}
+                                                <span class="ms-2">(تم التحديث: {{ post.updated_at|timesince }} مضت)</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="btn-group">
+                                    <a href="{% url 'courses:edit_post' course.slug post.pk %}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'courses:delete_post' post.pk %}" class="btn btn-outline-danger btn-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="post-content mb-3">
+                                <p class="mb-2">{{ post.content|linebreaks }}</p>
+                                {% if post.attachment %}
+                                    <div class="attachment-preview">
+                                        <a href="{{ post.attachment.url }}" class="btn btn-outline-secondary btn-sm" target="_blank">
+                                            <i class="fas fa-paperclip me-1"></i>عرض المرفق
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="post-meta">
+                                <span class="badge bg-light text-dark me-2">{{ post.get_post_type_display }}</span>
+                                <small class="text-muted">
+                                    <i class="fas fa-user me-1"></i>{{ post.author.get_full_name|default:post.author.username }}
+                                </small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        
+                        <!-- Pagination -->
+                        {% if is_paginated %}
+                        <nav aria-label="Posts pagination">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1">الأولى</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">السابقة</a>
+                                    </li>
+                                {% endif %}
+                                
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_obj.number }} من {{ page_obj.paginator.num_pages }}</span>
+                                </li>
+                                
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">التالية</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">الأخيرة</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-newspaper fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد منشورات بعد</h5>
+                            <p class="text-muted">ابدأ بإضافة منشورات لتفاعل أفضل مع طلابك</p>
+                            <a href="{% url 'courses:create_post' course.slug %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>إضافة أول منشور
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.post-item:last-child {
+    border-bottom: none !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.post-type-badge .badge {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.post-content {
+    margin-left: 55px;
+}
+
+.attachment-preview {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    border-left: 3px solid #007bff;
+}
+
+.post-meta {
+    margin-left: 55px;
+}
+</style>
+{% endblock %}

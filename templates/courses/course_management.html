@@ -1,0 +1,303 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}إدارة الدورة - {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Course Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-gradient-primary text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-2">{{ course.title }}</h2>
+                            <p class="mb-0 opacity-8">{{ course.short_description }}</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'courses:edit_course' course.slug %}" class="btn btn-light btn-sm">
+                                    <i class="fas fa-edit me-1"></i>تعديل
+                                </a>
+                                <a href="{% url 'courses:course_detail' course.slug %}" class="btn btn-outline-light btn-sm">
+                                    <i class="fas fa-eye me-1"></i>عرض
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">الطلاب المسجلين</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_students }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">المديولات</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_modules }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-layer-group fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">الفيديوهات</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_videos }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-play-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">متوسط التقدم</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ avg_progress|floatformat:1 }}%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">إجراءات سريعة</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-2 mb-2">
+                            <a href="{% url 'courses:create_module' course.slug %}" class="btn btn-primary btn-block">
+                                <i class="fas fa-plus me-1"></i>إضافة مديول
+                            </a>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <a href="{% url 'courses:create_post' course.slug %}" class="btn btn-success btn-block">
+                                <i class="fas fa-bullhorn me-1"></i>إضافة منشور
+                            </a>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <a href="{% url 'courses:student_progress' course.slug %}" class="btn btn-info btn-block">
+                                <i class="fas fa-chart-bar me-1"></i>تقدم الطلاب
+                            </a>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <a href="{% url 'courses:course_posts' course.slug %}" class="btn btn-warning btn-block">
+                                <i class="fas fa-newspaper me-1"></i>المنشورات
+                            </a>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <a href="{% url 'courses:manage_modules' course.slug %}" class="btn btn-secondary btn-block">
+                                <i class="fas fa-cogs me-1"></i>إدارة المحتوى
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Course Content Overview -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">محتوى الدورة</h5>
+                    <a href="{% url 'courses:manage_modules' course.slug %}" class="btn btn-sm btn-outline-primary">إدارة المحتوى</a>
+                </div>
+                <div class="card-body">
+                    {% if modules %}
+                        {% for module in modules %}
+                        <div class="module-item border-bottom pb-3 mb-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ module.title }}</h6>
+                                    <p class="text-muted small mb-2">{{ module.description|truncatechars:100 }}</p>
+                                    <small class="text-info">
+                                        <i class="fas fa-play-circle me-1"></i>{{ module.videos.count }} فيديو
+                                    </small>
+                                </div>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'courses:edit_module' module.pk %}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'courses:create_video' module.pk %}" class="btn btn-outline-success btn-sm">
+                                        <i class="fas fa-plus"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            {% if module.videos.all %}
+                            <div class="mt-2">
+                                <small class="text-muted">الفيديوهات:</small>
+                                <ul class="list-unstyled ms-3 mt-1">
+                                    {% for video in module.videos.all %}
+                                    <li class="small mb-1">
+                                        <i class="fas fa-play text-primary me-1"></i>
+                                        {{ video.title }}
+                                        {% if video.is_free %}<span class="badge bg-success ms-1">مجاني</span>{% endif %}
+                                        <span class="text-muted">({{ video.duration_minutes }} دقيقة)</span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-layer-group fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">لم يتم إضافة أي مديولات بعد</p>
+                            <a href="{% url 'courses:create_module' course.slug %}" class="btn btn-primary">إضافة أول مديول</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity & Students -->
+        <div class="col-lg-4">
+            <!-- Recent Posts -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">المنشورات الأخيرة</h6>
+                    <a href="{% url 'courses:course_posts' course.slug %}" class="btn btn-sm btn-outline-primary">عرض الكل</a>
+                </div>
+                <div class="card-body">
+                    {% if posts %}
+                        {% for post in posts %}
+                        <div class="d-flex mb-3">
+                            <div class="flex-shrink-0">
+                                <div class="badge bg-{{ post.post_type|default:'primary' }} rounded-pill">
+                                    {% if post.post_type == 'announcement' %}
+                                        <i class="fas fa-bullhorn"></i>
+                                    {% elif post.post_type == 'resource' %}
+                                        <i class="fas fa-file-alt"></i>
+                                    {% elif post.post_type == 'assignment' %}
+                                        <i class="fas fa-tasks"></i>
+                                    {% else %}
+                                        <i class="fas fa-comments"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-1 small">{{ post.title }}</h6>
+                                <p class="text-muted small mb-1">{{ post.content|truncatechars:60 }}</p>
+                                <small class="text-muted">{{ post.created_at|timesince }} مضت</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">لا توجد منشورات</p>
+                        <a href="{% url 'courses:create_post' course.slug %}" class="btn btn-sm btn-primary w-100">إضافة منشور</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Enrollments -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">الطلاب المسجلين حديثاً</h6>
+                    <a href="{% url 'courses:student_progress' course.slug %}" class="btn btn-sm btn-outline-primary">عرض الكل</a>
+                </div>
+                <div class="card-body">
+                    {% if enrollments %}
+                        {% for enrollment in enrollments|slice:":5" %}
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="flex-shrink-0">
+                                <div class="avatar-circle bg-primary text-white">
+                                    {{ enrollment.student.first_name|first|default:enrollment.student.username|first }}
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-0 small">{{ enrollment.student.get_full_name|default:enrollment.student.username }}</h6>
+                                <div class="progress progress-sm mt-1">
+                                    <div class="progress-bar" style="width: {{ enrollment.progress_percentage }}%"></div>
+                                </div>
+                                <small class="text-muted">{{ enrollment.progress_percentage }}% مكتمل</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">لا يوجد طلاب مسجلين بعد</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.border-left-primary { border-left: 0.25rem solid #4e73df !important; }
+.border-left-success { border-left: 0.25rem solid #1cc88a !important; }
+.border-left-info { border-left: 0.25rem solid #36b9cc !important; }
+.border-left-warning { border-left: 0.25rem solid #f6c23e !important; }
+
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.progress-sm {
+    height: 0.5rem;
+}
+
+.module-item:last-child {
+    border-bottom: none !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+</style>
+{% endblock %}

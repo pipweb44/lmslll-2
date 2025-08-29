@@ -1,0 +1,106 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}إضافة منشور - {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">إضافة منشور جديد</h4>
+                        <a href="{% url 'courses:course_posts' course.slug %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>العودة
+                        </a>
+                    </div>
+                    <p class="text-muted mb-0 mt-2">{{ course.title }}</p>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="{{ form.title.id_for_label }}" class="form-label">عنوان المنشور</label>
+                                    {{ form.title }}
+                                    {% if form.title.errors %}
+                                        <div class="text-danger small">{{ form.title.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.post_type.id_for_label }}" class="form-label">نوع المنشور</label>
+                                    {{ form.post_type }}
+                                    {% if form.post_type.errors %}
+                                        <div class="text-danger small">{{ form.post_type.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.content.id_for_label }}" class="form-label">محتوى المنشور</label>
+                            {{ form.content }}
+                            {% if form.content.errors %}
+                                <div class="text-danger small">{{ form.content.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="{{ form.attachment.id_for_label }}" class="form-label">مرفق (اختياري)</label>
+                                    {{ form.attachment }}
+                                    {% if form.attachment.errors %}
+                                        <div class="text-danger small">{{ form.attachment.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">يمكنك إرفاق ملف PDF، صورة، أو أي مستند مفيد للطلاب</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <div class="form-check mt-4">
+                                        {{ form.is_pinned }}
+                                        <label class="form-check-label" for="{{ form.is_pinned.id_for_label }}">
+                                            تثبيت المنشور
+                                        </label>
+                                    </div>
+                                    <div class="form-text">المنشورات المثبتة تظهر في أعلى القائمة</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'courses:course_posts' course.slug %}" class="btn btn-secondary me-md-2">إلغاء</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>نشر
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.form-text {
+    font-size: 0.875rem;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+</style>
+{% endblock %}
