@@ -150,6 +150,13 @@ class EditCourseView(LoginRequiredMixin, UpdateView):
     
     def get_queryset(self):
         return Course.objects.filter(instructor=self.request.user)
+    
+    def get_success_url(self):
+        return reverse_lazy('courses:course_detail', kwargs={'slug': self.object.slug})
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Course updated successfully!')
+        return super().form_valid(form)
 
 class DeleteCourseView(LoginRequiredMixin, DeleteView):
     model = Course
