@@ -1,0 +1,476 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ video.title }} - {{ course.title }}{% endblock %}
+
+{% block content %}
+<!-- Course Header -->
+<div class="bg-primary text-white py-3">
+    <div class="container">
+        <div class="d-flex align-items-center">
+            <a href="{% url 'courses:course_detail' course.slug %}" class="btn btn-outline-light me-3">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div>
+                <h5 class="mb-0">{{ course.title }}</h5>
+                <small class="text-white-50">{{ video.module.title }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Video Player Section -->
+        <div class="col-lg-8">
+            <!-- Video Player -->
+            <div class="card video-player-card mb-4">
+                <div class="card-body p-0">
+                    <div class="video-container position-relative">
+                        {% if video.video_file %}
+                        <video controls class="w-100" style="border-radius: 8px;">
+                            <source src="{{ video.video_file.url }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        {% else %}
+                        <div class="video-placeholder bg-gradient text-white text-center py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px;">
+                            <i class="fas fa-play-circle fa-5x mb-3 opacity-75"></i>
+                            <h4>{{ video.title }}</h4>
+                            <p class="text-white-50">Video content will be available soon</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Video Info -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h2 class="fw-bold mb-2">{{ video.title }}</h2>
+                            <div class="d-flex align-items-center gap-3 text-muted">
+                                <span><i class="fas fa-clock me-1"></i>{{ video.duration_minutes }} minutes</span>
+                                <span><i class="fas fa-book me-1"></i>{{ video.module.title }}</span>
+                                {% if video.is_free %}
+                                <span class="badge bg-success">Free Preview</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if enrollment %}
+                        <div class="text-end">
+                            <button class="btn btn-outline-success btn-sm" onclick="markAsCompleted()">
+                                <i class="fas fa-check me-1"></i>Mark Complete
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if video.description %}
+                    <div class="video-description">
+                        <h5 class="fw-bold mb-3">About this lesson</h5>
+                        <div class="description-content">
+                            {{ video.description|linebreaks }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Video Navigation -->
+                    <div class="video-navigation mt-4 pt-4 border-top">
+                        <div class="row">
+                            {% if previous_video %}
+                            <div class="col-6">
+                                <a href="{% url 'courses:video_player' course.slug previous_video.id %}" class="btn btn-outline-primary w-100 nav-btn text-decoration-none">
+                                    <i class="fas fa-chevron-left me-2"></i>Previous
+                                    <div><small class="text-muted">{{ previous_video.title|truncatechars:30 }}</small></div>
+                                </a>
+                            </div>
+                            {% endif %}
+                            {% if next_video %}
+                            <div class="col-6">
+                                <a href="{% url 'courses:video_player' course.slug next_video.id %}" class="btn btn-primary w-100 nav-btn">
+                                    Next<i class="fas fa-chevron-right ms-2"></i>
+                                    <div><small class="text-white-50">{{ next_video.title|truncatechars:30 }}</small></div>
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Course Progress -->
+            {% if enrollment %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-chart-line text-primary me-2"></i>Your Progress
+                    </h6>
+                    <div class="progress mb-3 progress-custom">
+                        <div class="progress-bar progress-bar-custom" style="width: {{ enrollment.progress_percentage|default:0 }}%"></div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-bold text-success">{{ enrollment.progress_percentage|default:0 }}% Complete</span>
+                        <small class="text-muted">{{ enrollment.enrolled_at|date:"M d, Y" }}</small>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Course Content -->
+            <div class="card course-content-sidebar">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0 fw-bold">
+                        <i class="fas fa-list me-2"></i>Course Content
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    {% for module in course.modules.all %}
+                    <div class="module-section">
+                        <div class="module-header p-3 bg-light border-bottom">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="fw-bold mb-0">{{ forloop.counter }}. {{ module.title }}</h6>
+                                <small class="text-muted">{{ module.videos.count }} videos</small>
+                            </div>
+                        </div>
+                        {% for video_item in module.videos.all %}
+                        <div class="video-item p-3 border-bottom {% if video_item.id == video.id %}current-video{% endif %}">
+                            <div class="d-flex align-items-center">
+                                {% if video_item.id == video.id %}
+                                <div class="current-indicator me-2">
+                                    <i class="fas fa-play text-primary"></i>
+                                </div>
+                                {% else %}
+                                <div class="video-icon me-2">
+                                    {% if video_item.is_free or user_enrolled %}
+                                    <i class="fas fa-play-circle text-primary"></i>
+                                    {% else %}
+                                    <i class="fas fa-lock text-muted"></i>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                                
+                                <div class="flex-grow-1">
+                                    {% if video_item.id == video.id %}
+                                    <span class="fw-bold text-primary">{{ video_item.title }}</span>
+                                    {% elif video_item.is_free or user_enrolled %}
+                                    <a href="{% url 'courses:video_player' course.slug video_item.id %}" class="text-decoration-none text-dark">
+                                        {{ video_item.title }}
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted">{{ video_item.title }}</span>
+                                    {% endif %}
+                                    
+                                    {% if video_item.is_free %}
+                                    <span class="badge bg-success ms-2">Free</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="video-meta text-end">
+                                    <small class="text-muted d-block">{{ video_item.duration_minutes }}m</small>
+                                    {% if enrollment %}
+                                    <i class="fas fa-check-circle text-success" style="font-size: 0.8rem;"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Course Info Card -->
+            <div class="card mt-4 course-info-card">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-info-circle text-primary me-2"></i>Course Info
+                    </h6>
+                    <div class="course-stats">
+                        <div class="stat-item">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="stat-icon">
+                                    <i class="fas fa-user-tie text-primary"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block">Instructor</small>
+                                    <span class="fw-bold">{{ course.instructor.get_full_name|default:course.instructor.username }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="stat-icon">
+                                    <i class="fas fa-users text-success"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block">Students Enrolled</small>
+                                    <span class="fw-bold">{{ course.total_students }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="stat-icon">
+                                    <i class="fas fa-star text-warning"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block">Rating</small>
+                                    <div class="d-flex align-items-center">
+                                        <div class="stars me-2">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= course.average_rating|default:0 %}
+                                                    <i class="fas fa-star text-warning"></i>
+                                                {% else %}
+                                                    <i class="far fa-star text-muted"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <span class="fw-bold">{{ course.average_rating|floatformat:1|default:"No ratings" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon">
+                                    <i class="fas fa-signal text-info"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block">Difficulty</small>
+                                    <span class="badge difficulty-{{ course.difficulty }}">{{ course.get_difficulty_display }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            {% if enrollment %}
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-bolt text-warning me-2"></i>Quick Actions
+                    </h6>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-success btn-sm" onclick="toggleBookmark()">
+                            <i class="fas fa-bookmark me-2"></i>Bookmark Video
+                        </button>
+                        <button class="btn btn-outline-info btn-sm" onclick="takeNotes()">
+                            <i class="fas fa-sticky-note me-2"></i>Take Notes
+                        </button>
+                        <a href="{% url 'courses:course_detail' course.slug %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Course
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.video-player-card {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    border: none;
+}
+
+.video-container video {
+    max-height: 500px;
+    object-fit: cover;
+}
+
+.current-video {
+    background: linear-gradient(90deg, rgba(13,110,253,0.1) 0%, rgba(13,110,253,0.05) 100%);
+    border-left: 4px solid #0d6efd;
+}
+
+.current-indicator {
+    width: 20px;
+    text-align: center;
+}
+
+.video-icon {
+    width: 20px;
+    text-align: center;
+}
+
+.module-header {
+    background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.video-item {
+    transition: all 0.3s ease;
+}
+
+.video-item:hover:not(.current-video) {
+    background-color: rgba(13,110,253,0.05);
+}
+
+.course-content-sidebar {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.course-content-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.course-content-sidebar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.course-content-sidebar::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.course-content-sidebar::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+.description-content {
+    line-height: 1.6;
+    color: #6c757d;
+}
+
+.course-stats .d-flex {
+    font-size: 0.9rem;
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(13,110,253,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+}
+
+.course-info-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border: none;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+}
+
+.nav-btn {
+    height: 60px;
+    text-align: center;
+}
+
+.video-navigation .btn small {
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+.bg-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.progress-custom {
+    height: 8px;
+}
+
+.progress-bar-custom {
+    background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+}
+
+.stars i {
+    font-size: 0.9rem;
+}
+
+@media (max-width: 991px) {
+    .course-content-sidebar {
+        max-height: 400px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function markAsCompleted() {
+    alert('سيتم إضافة هذه الميزة قريباً');
+}
+
+function toggleBookmark() {
+    const btn = event.target.closest('button');
+    const icon = btn.querySelector('i');
+    
+    if (icon.classList.contains('fas')) {
+        icon.classList.remove('fas');
+        icon.classList.add('far');
+        btn.innerHTML = '<i class="far fa-bookmark me-2"></i>Bookmark Video';
+        showToast('تم إلغاء الإشارة المرجعية', 'info');
+    } else {
+        icon.classList.remove('far');
+        icon.classList.add('fas');
+        btn.innerHTML = '<i class="fas fa-bookmark me-2"></i>Bookmarked';
+        showToast('تم حفظ الإشارة المرجعية', 'success');
+    }
+}
+
+function takeNotes() {
+    const video = document.querySelector('video');
+    const currentTime = video ? Math.floor(video.currentTime) : 0;
+    const minutes = Math.floor(currentTime / 60);
+    const seconds = currentTime % 60;
+    
+    const note = prompt(`إضافة ملاحظة في الوقت ${minutes}:${seconds.toString().padStart(2, '0')}:`);
+    if (note) {
+        showToast('تم حفظ الملاحظة', 'success');
+        // يمكن إضافة حفظ الملاحظة في قاعدة البيانات لاحقاً
+    }
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'success' ? 'success' : 'info'} position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 250px;';
+    toast.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
+            ${message}
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// تتبع تقدم الفيديو
+document.addEventListener('DOMContentLoaded', function() {
+    const video = document.querySelector('video');
+    if (video) {
+        video.addEventListener('timeupdate', function() {
+            const progress = (video.currentTime / video.duration) * 100;
+            // يمكن إرسال التقدم إلى الخادم هنا
+        });
+        
+        video.addEventListener('ended', function() {
+            // عند انتهاء الفيديو، يمكن الانتقال للفيديو التالي تلقائياً
+            const nextBtn = document.querySelector('.video-navigation .btn-primary');
+            if (nextBtn && confirm('انتهى الفيديو! هل تريد الانتقال للدرس التالي؟')) {
+                nextBtn.click();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

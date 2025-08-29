@@ -1,0 +1,211 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Profile - EduPlatform{% endblock %}
+
+{% block content %}
+<!-- Profile Header -->
+<section class="profile-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-3 text-center">
+                {% if user.profile_picture %}
+                <img src="{{ user.profile_picture.url }}" class="profile-avatar" alt="{{ user.get_full_name }}">
+                {% else %}
+                <div class="profile-avatar bg-white d-flex align-items-center justify-content-center mx-auto">
+                    <i class="fas fa-user text-primary" style="font-size: 3rem;"></i>
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-md-9">
+                <h1 class="fw-bold mb-2">{{ user.get_full_name|default:user.username }}</h1>
+                <p class="mb-2">
+                    <i class="fas fa-user-tag me-2"></i>{{ user.get_user_type_display }}
+                    {% if user.is_teacher and user.teacher_profile.is_verified %}
+                    <i class="fas fa-check-circle text-warning ms-2" title="Verified Teacher"></i>
+                    {% endif %}
+                </p>
+                {% if user.bio %}
+                <p class="mb-3">{{ user.bio }}</p>
+                {% endif %}
+                <a href="{% url 'accounts:edit_profile' %}" class="btn btn-outline-light">
+                    <i class="fas fa-edit me-2"></i>Edit Profile
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container py-5">
+    {% if user.is_student %}
+    <!-- Student Dashboard -->
+    <div class="row mb-5">
+        <div class="col-md-4">
+            <div class="dashboard-card">
+                <i class="fas fa-book dashboard-icon"></i>
+                <div class="dashboard-number">{{ enrollments.count }}</div>
+                <div class="dashboard-label">Enrolled Courses</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="dashboard-card">
+                <i class="fas fa-clock dashboard-icon"></i>
+                <div class="dashboard-number">{{ enrollment_requests.count }}</div>
+                <div class="dashboard-label">Pending Requests</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="dashboard-card">
+                <i class="fas fa-certificate dashboard-icon"></i>
+                <div class="dashboard-number">{{ enrollments|length }}</div>
+                <div class="dashboard-label">Certificates</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- My Courses -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4 class="mb-0">My Courses</h4>
+        </div>
+        <div class="card-body">
+            {% if enrollments %}
+            <div class="row">
+                {% for enrollment in enrollments %}
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ enrollment.course.title }}</h6>
+                            <p class="card-text text-muted">{{ enrollment.course.instructor.get_full_name }}</p>
+                            <div class="progress mb-2">
+                                <div class="progress-bar" style="width: {{ enrollment.progress_percentage }}%"></div>
+                            </div>
+                            <small class="text-muted">{{ enrollment.progress_percentage }}% Complete</small>
+                            <div class="mt-2">
+                                <a href="{% url 'courses:course_detail' enrollment.course.slug %}" class="btn btn-sm btn-primary">Continue</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted">You haven't enrolled in any courses yet. <a href="{% url 'courses:course_list' %}">Browse courses</a></p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Enrollment Requests -->
+    <div class="card">
+        <div class="card-header">
+            <h4 class="mb-0">My Enrollment Requests</h4>
+        </div>
+        <div class="card-body">
+            {% if enrollment_requests %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Course</th>
+                            <th>Status</th>
+                            <th>Requested</th>
+                            <th>Contact</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in enrollment_requests %}
+                        <tr>
+                            <td>
+                                <strong>{{ request.course.title }}</strong><br>
+                                <small class="text-muted">{{ request.course.instructor.get_full_name }}</small>
+                            </td>
+                            <td>
+                                <span class="status-{{ request.status }}">{{ request.get_status_display }}</span>
+                            </td>
+                            <td>{{ request.created_at|date:"M d, Y" }}</td>
+                            <td>{{ request.email }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No enrollment requests yet.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% elif user.is_teacher %}
+    <!-- Teacher Dashboard -->
+    <div class="row mb-5">
+        <div class="col-md-4">
+            <div class="dashboard-card">
+                <i class="fas fa-chalkboard dashboard-icon"></i>
+                <div class="dashboard-number">{{ courses.count }}</div>
+                <div class="dashboard-label">My Courses</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="dashboard-card">
+                <i class="fas fa-users dashboard-icon"></i>
+                <div class="dashboard-number">{{ total_students }}</div>
+                <div class="dashboard-label">Total Students</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="dashboard-card">
+                <i class="fas fa-star dashboard-icon"></i>
+                <div class="dashboard-number">4.8</div>
+                <div class="dashboard-label">Average Rating</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex gap-3">
+                <a href="{% url 'courses:create_course' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Create New Course
+                </a>
+                <a href="{% url 'courses:teacher_dashboard' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-tachometer-alt me-2"></i>Full Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- My Courses -->
+    <div class="card">
+        <div class="card-header">
+            <h4 class="mb-0">My Courses</h4>
+        </div>
+        <div class="card-body">
+            {% if courses %}
+            <div class="row">
+                {% for course in courses %}
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ course.title }}</h6>
+                            <p class="card-text text-muted">{{ course.total_students }} student{{ course.total_students|pluralize }}</p>
+                            <span class="badge bg-{{ course.is_published|yesno:'success,warning' }}">
+                                {{ course.is_published|yesno:'Published,Draft' }}
+                            </span>
+                            <div class="mt-2">
+                                <a href="{% url 'courses:edit_course' course.slug %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a href="{% url 'courses:manage_modules' course.slug %}" class="btn btn-sm btn-outline-secondary">Modules</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted">You haven't created any courses yet. <a href="{% url 'courses:create_course' %}">Create your first course</a></p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,220 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}EduPlatform - Learn Without Limits{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section bg-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Learn Without Limits</h1>
+                <p class="lead mb-4">Join millions of learners from around the world already learning on EduPlatform. Master new skills with expert instructors.</p>
+                <div class="d-flex gap-3">
+                    <a href="{% url 'courses:course_list' %}" class="btn btn-light btn-lg">
+                        <i class="fas fa-search me-2"></i>Explore Courses
+                    </a>
+                    {% if not user.is_authenticated %}
+                    <a href="{% url 'accounts:register' %}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-user-plus me-2"></i>Join for Free
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <div class="hero-image">
+                    <i class="fas fa-graduation-cap" style="font-size: 8rem; opacity: 0.8;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Courses -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Featured Courses</h2>
+            <p class="text-muted">Discover our most popular courses taught by industry experts</p>
+        </div>
+        
+        {% if featured_courses %}
+        <div class="row">
+            {% for course in featured_courses %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card course-card h-100">
+                    {% if course.thumbnail %}
+                    <img src="{{ course.thumbnail.url }}" class="course-thumbnail" alt="{{ course.title }}">
+                    {% else %}
+                    <div class="course-thumbnail bg-primary d-flex align-items-center justify-content-center">
+                        <i class="fas fa-play-circle text-white" style="font-size: 3rem;"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="card-body course-card-body d-flex flex-column">
+                        <h5 class="course-title">{{ course.title }}</h5>
+                        <p class="course-instructor">
+                            <i class="fas fa-user me-1"></i>{{ course.instructor.get_full_name|default:course.instructor.username }}
+                        </p>
+                        
+                        <div class="course-rating mb-2">
+                            <div class="stars">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= course.average_rating|default:0 %}
+                                        <i class="fas fa-star"></i>
+                                    {% else %}
+                                        <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <span class="text-muted">({{ course.ratings.count }})</span>
+                        </div>
+                        
+                        <p class="text-muted small mb-3 flex-grow-1">{{ course.short_description|truncatechars:100 }}</p>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="course-difficulty difficulty-{{ course.difficulty }}">
+                                {{ course.get_difficulty_display }}
+                            </span>
+                            <span class="course-price">
+                                {% if course.price == 0 %}
+                                    Free
+                                {% else %}
+                                    ${{ course.price }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        <a href="{% url 'courses:course_detail' course.slug %}" class="btn btn-primary w-100 mt-auto">
+                            View Course
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{% url 'courses:course_list' %}" class="btn btn-outline-primary btn-lg">
+                View All Courses <i class="fas fa-arrow-right ms-2"></i>
+            </a>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-book fa-3x text-muted mb-3"></i>
+            <h4>No courses available yet</h4>
+            <p class="text-muted">Check back soon for exciting new courses!</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Categories Section -->
+<section class="bg-light py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Browse by Category</h2>
+            <p class="text-muted">Find courses in your area of interest</p>
+        </div>
+        
+        {% if categories %}
+        <div class="row">
+            {% for category in categories %}
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                <div class="card category-card text-center h-100">
+                    <div class="card-body">
+                        <div class="category-icon mb-3">
+                            <i class="fas fa-{{ category.icon|default:'book' }} fa-3x text-primary"></i>
+                        </div>
+                        <h5 class="card-title">{{ category.name }}</h5>
+                        <p class="text-muted small">{{ category.description|truncatechars:80 }}</p>
+                        <a href="{% url 'courses:course_list' %}?category={{ category.id }}" class="btn btn-outline-primary btn-sm">
+                            Explore <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3 mb-4">
+                <div class="stat-item">
+                    <h3 class="fw-bold text-primary">{{ total_courses }}</h3>
+                    <p class="text-muted">Courses Available</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="stat-item">
+                    <h3 class="fw-bold text-primary">{{ total_students }}</h3>
+                    <p class="text-muted">Students Enrolled</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="stat-item">
+                    <h3 class="fw-bold text-primary">{{ total_teachers }}</h3>
+                    <p class="text-muted">Expert Instructors</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="stat-item">
+                    <h3 class="fw-bold text-primary">{{ total_hours }}</h3>
+                    <p class="text-muted">Hours of Content</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+{% if not user.is_authenticated %}
+<section class="bg-primary text-white py-5">
+    <div class="container text-center">
+        <h2 class="fw-bold mb-3">Ready to Start Learning?</h2>
+        <p class="lead mb-4">Join thousands of students already learning on our platform</p>
+        <a href="{% url 'accounts:register' %}" class="btn btn-light btn-lg">
+            <i class="fas fa-rocket me-2"></i>Get Started Today
+        </a>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.category-card {
+    transition: transform 0.3s ease;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+}
+
+.stat-item h3 {
+    font-size: 2.5rem;
+}
+
+.hero-image {
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+</style>
+{% endblock %}

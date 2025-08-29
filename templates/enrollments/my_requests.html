@@ -1,0 +1,62 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}My Enrollment Requests - EduPlatform{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="fw-bold mb-4">My Enrollment Requests</h1>
+    
+    {% if requests %}
+    <div class="row">
+        {% for request in requests %}
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="card-title">{{ request.course.title }}</h5>
+                        <span class="status-{{ request.status }}">{{ request.get_status_display }}</span>
+                    </div>
+                    
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-user me-2"></i>{{ request.course.instructor.get_full_name }}
+                    </p>
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-calendar me-2"></i>Requested: {{ request.created_at|date:"M d, Y" }}
+                    </p>
+                    <p class="text-muted mb-3">
+                        <i class="fas fa-envelope me-2"></i>Contact: {{ request.email }}
+                    </p>
+                    
+                    {% if request.message %}
+                    <div class="bg-light p-3 rounded mb-3">
+                        <small class="text-muted">Your message:</small>
+                        <p class="mb-0">{{ request.message }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if request.admin_notes and request.status != 'pending' %}
+                    <div class="alert alert-info">
+                        <strong>Admin Notes:</strong><br>
+                        {{ request.admin_notes }}
+                    </div>
+                    {% endif %}
+                    
+                    <a href="{% url 'courses:course_detail' request.course.slug %}" class="btn btn-outline-primary btn-sm">
+                        View Course
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+        <h4>No enrollment requests</h4>
+        <p class="text-muted">You haven't requested enrollment in any courses yet.</p>
+        <a href="{% url 'courses:course_list' %}" class="btn btn-primary">Browse Courses</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
